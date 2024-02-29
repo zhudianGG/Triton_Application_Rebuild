@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# translate : bash /opt/tritonserver/boostrap/server_launcher triton /home/ps/xiaoyuze/security_models opus_mt_en_zh 4 > triton.log 2>&1 &
+# embedding : bash /opt/tritonserver/boostrap/server_launcher triton /home/ps/xiaoyuze/security_models m3e_base 4 > triton.log 2>&1 &
+# safe_check: bash /opt/tritonserver/boostrap/server_launcher triton /home/ps/xiaoyuze/security_models chinese_roberta_wwm_ext 6 > triton.log 2>&1 &
+
+SHELL_FOLDER=$(cd "$(dirname "$0")";pwd)
+echo "SHELL_FOLDER:"$SHELL_FOLDER
+#MYDIR=$(dirname $(dirname "$0"))
+CODE_BASE_PATH=$(dirname "$SHELL_FOLDER")
+#CODE_BASE_PATH=$1
+echo "CODE_BASE_PATH:"$CODE_BASE_PATH
+SERVER_TYPE=$1
+echo "SERVER_TYPE(triton or bridge):"$SERVER_TYPE
+MODEL_BASE_PATH=$2
+echo "MODEL_BASE_PATH:"$MODEL_BASE_PATH
+MODEL_NAME=$3
+echo "MODEL_NAME:"$MODEL_NAME
+MODEL_REPLICA=$4
+echo "MODEL_REPLICA:"$MODEL_REPLICA
+
+if [ $SERVER_TYPE != "triton" ]
+then
+    echo "start bridge server"
+    python3 $CODE_BASE_PATH'/bridge_code/bridge.py' --model-type=$MODEL_NAME --triton_url='127.0.0.1:8000' #  > bridge.log 2>&1 &
+else
+    echo "start triton server"
+    BC_GPU_MEMORY_FRACTION=${BC_GPU_MEMORY_FRACTION:=1.0}
+    #BC_GPU_MEMORY_FRACTION=`expr $BC_GPU_MEMORY_FRACTION / $MODEL_REPLICA`
+    BC_GPU_MEMORY_FRACTION=`awk 'BEGIN{printf "%0.5f",'$BC_GPU_MEMORY_FRACTION'/'$MODEL_REPLICA'}'`
+    echo "BC_GPU_MEMORY_FRACTION:"$BC_GPU_MEMORY_FRACTION
+    export BC_GPU_MEMORY_FRACTION=$BC_GPU_MEMORY_FRACTION
+    python3 $CODE_BASE_PATH'/boostrap/rewrite_config_pbtext.py' --path $CODE_BASE_PATH"/triton_code/"$MODEL_NAME"/config.pbtxt" --replica $MODEL_REPLICA
+    #CUDA_VISIBLE_DEVICES=6 
+    # --log-verbose 1 
+    MODEL_BASE_PATH=$MODEL_BASE_PATH tritonserver --model-repository=$CODE_BASE_PATH'/triton_code' --load-model=$MODEL_NAME --model-control-mode  explicit # > triton.log 2>&1 &
+fi
+

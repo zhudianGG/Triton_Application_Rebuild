@@ -1,0 +1,5 @@
+#!/bin/bash
+SHELL_FOLDER=$(cd "$(dirname "$0")";pwd)
+echo "SHELL_FOLDER:"$SHELL_FOLDER
+bash $SHELL_FOLDER'/server_launcher' triton $1 $2 $3 > triton.log 2>&1 &
+bash $SHELL_FOLDER'/server_launcher' bridge $1 $2 $3 > bridge.log 2>&1 &

@@ -1,0 +1,10 @@
+#!/bin/bash
+LOG_PATH=logs
+if [ -d $LOG_PATH ]; then
+    rm -r $LOG_PATH
+    echo "=======logs directory is existed========"
+fi
+mkdir -p $LOG_PATH
+
+python3 /baichuan/sulei/product_models/security/translate_server.py --model-id /baichuan/sulei/product_models/security/security_models/opus_mt_en_zh/ --device cuda --port 80
+

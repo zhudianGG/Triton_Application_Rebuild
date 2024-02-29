@@ -1,0 +1,44 @@
+name: "chinese_roberta_wwm_ext"
+backend: "python"
+max_batch_size: 4
+input [
+  {
+    name: "input_strs"
+    data_type: TYPE_STRING
+    dims: [ -1, 1]
+  },
+  {
+    name: "history"
+    data_type: TYPE_STRING
+    dims: [ -1, 1]
+  }
+]
+output [
+  {
+    name: "safety_code"
+    data_type: TYPE_INT32
+    dims: [ -1]
+  },
+  {
+    name: "safety_score"
+    data_type: TYPE_FP32
+    dims: [ -1]
+  },
+  {
+    name: "unsafe_category"
+    data_type: TYPE_STRING
+    dims: [ -1]
+  },
+  {
+    name: "unsafe_score"
+    data_type: TYPE_FP32
+    dims: [ 1]
+  }
+]
+instance_group [
+{
+    count: 1
+    kind: KIND_GPU
+    gpus: [ 0 ]
+}
+]

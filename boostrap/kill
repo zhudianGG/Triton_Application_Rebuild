@@ -1,0 +1,3 @@
+#!/bin/bash
+kill $(ps aux | grep 'tritonserver' | awk '{print $2}')
+kill $(ps aux | grep 'bridge.py' | awk '{print $2}')
